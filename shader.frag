@@ -123,20 +123,36 @@ mat4 rotation3d(vec3 axis, float angle) {
   );
 }
 
-float torus(vec3 pos, vec2 threshold, float time)
+float star(vec3 pos, float size, int points, float roundness, float time)
 {
 	pos = (rotation3d(normalize(vec3(0.3, 0.8, 0.1)), time) * vec4(pos, 1.0)).xyz;
-	vec3 q = vec3(length(pos.xz) - threshold.x, pos.y, pos.z * sin(time * 0.1) * 0.3);
-	return length(q) - threshold.y;
+	
+	// star shape
+	vec2 p = pos.xy;
+	float angle = atan(p.y, p.x);
+	float radius = length(p);
+	
+	//star pattern
+	float numPoints = float(points);
+	float a = mod(angle, 2.0 * 3.14159 / numPoints) - 3.14159 / numPoints;
+	float innerRadius = size * 0.4;
+	float outerRadius = size;
+	
+	// Distance from center to star edge at this angle
+	float starRadius = mix(outerRadius, innerRadius, (cos(a * numPoints) + 1.0) * 0.5);
+	
+	// 3D extrusion
+	float dist2D = radius - starRadius;
+	vec3 q = vec3(dist2D, pos.z, 0.0);
+	
+	return length(q) - roundness;
 }
 
 
 float scene_sdf(vec3 pos, float time)
 {
-
 	float noise = noise(pos * 2.0) * 0.2;
-	float shape = torus(pos + vec3(noise), vec2(0.3, 0.1), time);
-	
+	float shape = star(pos + vec3(noise), 0.4, 5, 0.08, time);
 	
 	return shape;
 }
